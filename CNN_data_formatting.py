@@ -4,6 +4,7 @@ from TDMS_Batch_Reader import *
 from TDMS_Utilities import get_data
 from clustering import labelled_cluster_association, cluster_association
 from filters import filter_waterfall
+import matplotlib.pyplot as plt
 
 def cnn_event_windows_10(tdms_folder, clusters_folder, save, window_width, window_height):
     filenames = sorted([filename for filename in os.listdir(tdms_folder)])
@@ -129,6 +130,12 @@ def labelled_cnn_event_windows_10(tdms_folder, labels_folder, clusters_folder, s
 
     total_clusters = 0
 
+    # soil = True
+    # foot = True
+    # nano = True
+    # fade = True
+    # noise = True
+
     for file_number, tdms in enumerate(tdms_array):
 
         if file_number == 0:
@@ -163,6 +170,101 @@ def labelled_cnn_event_windows_10(tdms_folder, labels_folder, clusters_folder, s
                 #TDMS chan chan samp samp
                 w = get_data(tdms, (channel_midp - int(window_width/2)), (channel_midp + int(window_width/2)), (sample_midp - int(window_height/2)), (sample_midp + int(window_height/2)))
                 fw = filter_waterfall(w, 1000, 100, -1)
+
+                # if label == 'c' and soil:
+                #     soil = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("soil")
+                #
+                # elif label == 'p' and nano:
+                #     nano = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("nano")
+                #
+                # elif label == 'f' and foot:
+                #     foot = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("foot")
+                #
+                # elif label == 'e' and fade:
+                #     fade = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("fade")
+                #
+                # elif label == 'n' and noise:
+                #     noise = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("noise")
 
                 export = [label, w, fw]
 
@@ -233,6 +335,102 @@ def labelled_cnn_event_windows_10(tdms_folder, labels_folder, clusters_folder, s
                     del pt1, pt2
 
                 fw = filter_waterfall(w, 1000, 100, -1)
+
+                # if label == 'c' and soil:
+                #     soil = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("soil")
+                #
+                # elif label == 'p' and nano:
+                #     nano = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("nano")
+                #
+                # elif label == 'f' and foot:
+                #     foot = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("foot")
+                #
+                # elif label == 'e' and fade:
+                #     fade = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("fade")
+                #
+                # elif label == 'n' and noise:
+                #     noise = False
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(w, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     bounds = 1000
+                #     fig, ax = plt.subplots()
+                #     img1 = ax.imshow(fw, interpolation='none', vmin=-bounds, vmax=bounds)
+                #     img1.set_cmap(plt.colormaps['bwr'])
+                #     plt.show()
+                #     plt.close()
+                #
+                #     print("noise")
+
 
                 export = [label, w, fw]
 
@@ -583,7 +781,7 @@ def labelled_cnn_event_windows_30(tdms_folder, labels_folder, clusters_folder, s
 if __name__ == '__main__':
 
     device = "G"
-    window = "NDay"
+    window = "JDay"
     save = F"{device}:\\CNN Formatted Data - 80 x 240\\{window}"
 
     tdms_folder = f"{device}:/1000Hz Data/{window}/"
@@ -591,9 +789,9 @@ if __name__ == '__main__':
     clusters_folder = f"{device}:/Clusters/{window}/"
 
     if window == "FDay" or window == "FNight":
-        labelled_cnn_event_windows_30(tdms_folder, labels_folder, clusters_folder, save, 80, 240)
+        labelled_cnn_event_windows_30(tdms_folder, labels_folder, clusters_folder, save, 160, 240)
     else:
-        labelled_cnn_event_windows_10(tdms_folder, labels_folder, clusters_folder, save, 80, 240)
+        labelled_cnn_event_windows_10(tdms_folder, labels_folder, clusters_folder, save, 160, 240)
 
 
     # tdms_directory = "G:/1000Hz Data/NDay/"

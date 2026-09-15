@@ -1,10 +1,12 @@
 import os
 import pickle
+import gc
 from copy import deepcopy
 
 import numpy as np
 from matplotlib import pyplot as plt, patches
 from sympy import false
+from tensorflow.python.framework.test_ops import none_eager_fallback
 from tqdm import tqdm
 from matplotlib import pyplot as plt
 from matplotlib import patches
@@ -417,103 +419,114 @@ def label_cluster(cnn_model_path, cluster_data, data, filtered_data, save, windo
                         diffY = c[1] - c[0]
                         diffX = c[3] - c[2]
 
-                        if diffY > 100:
-                            minY = c[0] - 100
-                            if minY < 0:
-                                minY = 0
-                            maxY = c[1] + 100
-                            ylen = 100
+                        if 6110 < c[2] < 6170 or 6110 < c[3] < 6170:
+                            labelled_cluster = [diffY, diffX, "unlabelled"]
+                            print(f'{labelled_cluster} - exposure section')
+                            labelled_clusters.append(labelled_cluster)
                         else:
-                            minY = c[0] - 50
-                            if minY < 0:
-                                minY = 0
-                            maxY = c[1] + 50
-                            ylen = 50
 
-                        if diffX > 100:
-                            minX = c[2] - 100
-                            maxX = c[3] + 100
-                            xlen = 100
-                        else:
-                            minX = c[2] - 50
-                            maxX = c[3] + 50
-                            xlen = 50
+                            if diffY > 100:
+                                minY = c[0] - 100
+                                if minY < 0:
+                                    minY = 0
+                                maxY = c[1] + 100
+                                ylen = 100
+                            else:
+                                minY = c[0] - 50
+                                if minY < 0:
+                                    minY = 0
+                                maxY = c[1] + 50
+                                ylen = 50
+
+                            if diffX > 100:
+                                minX = c[2] - 100
+                                maxX = c[3] + 100
+                                xlen = 100
+                            else:
+                                minX = c[2] - 50
+                                maxX = c[3] + 50
+                                xlen = 50
 
 
-                        windowData.append(data[minY:maxY, minX: maxX])
-                        fWindowData.append(filtered_data[minY:maxY, minX: maxX])
+                            windowData.append(data[minY:maxY, minX: maxX])
+                            fWindowData.append(filtered_data[minY:maxY, minX: maxX])
 
-                        bounds = 1000
-                        fig, ax = plt.subplots()
-                        img1 = ax.imshow(data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-                        # ax.set_xlim(1200, 1500)
-                        plt.ylabel('Time (seconds)')
-                        img1.set_cmap(plt.cm.get_cmap('bwr'))
-                        plt.show(block=False)
-                        plt.close()
+                            bounds = 1000
+                            fig, ax = plt.subplots()
+                            img1 = ax.imshow(data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
+                            # ax.set_xlim(1200, 1500)
+                            plt.ylabel('Time (seconds)')
+                            img1.set_cmap(plt.cm.get_cmap('bwr'))
+                            plt.show(block=False)
+                            plt.close()
 
-                        bounds = 1000
-                        fig, ax = plt.subplots()
-                        img1 = ax.imshow(data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-                        # ax.set_xlim(1200, 1500)
-                        plt.ylabel('Time (seconds)')
-                        img1.set_cmap(plt.cm.get_cmap('bwr'))
+                            bounds = 1000
+                            fig, ax = plt.subplots()
+                            img1 = ax.imshow(data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
+                            # ax.set_xlim(1200, 1500)
+                            plt.ylabel('Time (seconds)')
+                            img1.set_cmap(plt.cm.get_cmap('bwr'))
 
-                        rect = patches.Rectangle((c[2], c[0]), c[3] - c[2], (c[1] - c[0]), linewidth=2, edgecolor="black",
-                                                 facecolor='none')
-                        ax.add_patch(rect)
-                        plt.show(block=False)
-                        plt.close()
+                            if diffY < 5 or diffX < 5:
+                                rect = patches.Rectangle((c[2], c[0]), c[3] - c[2] + 5, (c[1] - c[0]) + 5, linewidth=5, edgecolor="black",
+                                                         facecolor='none')
+                            else:
+                                rect = patches.Rectangle((c[2], c[0]), c[3] - c[2], (c[1] - c[0]), linewidth=5, edgecolor="black",
+                                                     facecolor='none')
+                            ax.add_patch(rect)
+                            plt.show(block=False)
+                            plt.close()
+                            print(f'{c[2]}, {c[0]}')
 
-                        bounds = 1000
-                        fig, ax = plt.subplots()
-                        img1 = ax.imshow(windowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-                        plt.ylabel('Time (milliseconds)')
-                        plt.title(f'Window {count}')
-                        img1.set_cmap(plt.colormaps['bwr'])
+                            bounds = 1000
+                            fig, ax = plt.subplots()
+                            img1 = ax.imshow(windowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
+                            plt.ylabel('Time (milliseconds)')
+                            plt.title(f'Window {count}')
+                            img1.set_cmap(plt.colormaps['bwr'])
 
-                        rect = patches.Rectangle(((int(xlen - int(diffX)/2)), int(ylen - int(diffY)/2)), c[3] - c[2], (c[1] - c[0]), linewidth=2,
-                                                 edgecolor="black", facecolor='none')
+                            rect = patches.Rectangle((int(xlen), int(ylen)), c[3] - c[2], (c[1] - c[0]), linewidth=2,
+                                                     edgecolor="black", facecolor='none')
 
-                        ax.add_patch(rect)
+                            ax.add_patch(rect)
 
-                        plt.show()
-                        plt.close()
+                            plt.show()
+                            plt.close()
 
-                        bounds = 1000
-                        fig, ax = plt.subplots()
-                        img1 = ax.imshow(fWindowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-                        plt.ylabel('Time (milliseconds)')
-                        plt.title(f'Window {count}')
-                        img1.set_cmap(plt.colormaps['bwr'])
+                            bounds = 1000
+                            fig, ax = plt.subplots()
+                            img1 = ax.imshow(fWindowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
+                            plt.ylabel('Time (milliseconds)')
+                            plt.title(f'Window {count}')
+                            img1.set_cmap(plt.colormaps['bwr'])
 
-                        rect = patches.Rectangle(((int(xlen - int(diffX)/2)), int(ylen - int(diffY)/2)), c[3] - c[2], (c[1] - c[0]), linewidth=2,
-                                                 edgecolor="black", facecolor='none')
+                            rect = patches.Rectangle(((int(xlen)), int(ylen)), c[3] - c[2], (c[1] - c[0]), linewidth=2,
+                                                     edgecolor="black", facecolor='none')
 
-                        ax.add_patch(rect)
+                            ax.add_patch(rect)
 
-                        plt.show()
-                        plt.close()
+                            plt.show()
+                            plt.close()
 
-                        bounds = 1000
-                        fig, ax = plt.subplots()
-                        img1 = ax.imshow(fWindowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-                        plt.ylabel('Time (milliseconds)')
-                        plt.title(f'Window {count}')
-                        img1.set_cmap(plt.colormaps['bwr'])
+                            bounds = 1000
+                            fig, ax = plt.subplots()
+                            img1 = ax.imshow(fWindowData[0], aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
+                            plt.ylabel('Time (milliseconds)')
+                            plt.title(f'Window {count}')
+                            img1.set_cmap(plt.colormaps['bwr'])
 
-                        plt.show()
-                        plt.close()
+                            plt.show()
+                            plt.close()
 
-                        labelled_cluster = [diffY, diffX]
+                            labelled_cluster = [diffY, diffX]
 
-                        print(labelled_cluster)
-                        label = input("Event Type>>>")
+                            print(labelled_cluster)
+                            label = input("Event Type>>>")
 
-                        labelled_cluster.append(label)
-                        labelled_clusters.append(labelled_cluster)
-                        print(labelled_cluster)
-                        # print("i wanna break here")
+                            labelled_cluster.append(label)
+                            labelled_clusters.append(labelled_cluster)
+                            print(labelled_cluster)
+                            # print("i wanna break here")
 
                     count += 1
 
@@ -538,7 +551,7 @@ def ten_sec_labelling(tdms_folder, clusters_folder, cnn_model_path, save, window
             data = get_data(tdms)
             filtered_data = filter_waterfall(data, 1000, 100)
 
-            if file_number >= 231:
+            if file_number >= 0:
                 if file_number == 0:
 
                     with open(f"{clusters_folder}/{clusters_array[file_number]}", "rb") as fp:   # Unpickling
@@ -592,174 +605,110 @@ def ten_sec_labelling(tdms_folder, clusters_folder, cnn_model_path, save, window
             pbar.update(1)
 
 
-# def thirtyseclabelling():
-#
-#     device = "G:/"
-#
-#     directory = f"{device}Clusters/FNight/"
-#     cluster_array = sorted([filename for filename in os.listdir(directory)])
-#     #cluster_array = cluster_array[0:5]
-#
-#     tdms_array = load_folder(f"{device}1000Hz Data/FNight/")
-#     tdms_array = sort_array(tdms_array)
-#     #tdms_array = tdms_array[0:3]
-#
-#     highcut = -1
-#     lowcut = 100
-#
-#     priordata = None
-#     prior_fdata = None
-#     prior_cInfo = None
-#
-#     count = 1
-#     total = len(tdms_array)
-#     for i, tdms in enumerate(tdms_array):
-#         print(f"-----------------{count}/{total}-----------------")
-#
-#
-#         data = getData(tdms)
-#         filtered_data = filter_waterfall(data, 1000, lowcut=lowcut, highcut=highcut)
-#
-#         future_prior = []
-#         combined = []
-#         #3
-#         if count >= 1:
-#             if priordata is None:
-#
-#                 for j in range(5):
-#                     with open(f"{directory}{cluster_array[i+j]}", "rb") as fp:  # Unpickling
-#                         cInfo = pickle.load(fp)
-#
-#                     if j == 0:
-#                         for c in cInfo:
-#                             combined.append([c[0], c[1], c[2], c[3], c[4]])
-#                     elif j == 4:
-#                         combined.extend(x for x in cInfo if x not in combined)
-#                         for c in cInfo:
-#                             future_prior.append([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]])
-#                     else:
-#                         combined.extend(x for x in cInfo if x not in combined)
-#
-#                 # fig, ax = test_graphs(combined, "g")
-#                 # plt.xlim(0, 9000)
-#                 # plt.ylim(60000, 0)
-#                 # plt.show()
-#                 # plt.close(fig)
-#
-#                 combined = unlabeled_association(combined, 0.25, 1000)
-#                 label_cinfo(combined, data, filtered_data,
-#                             f"{device}Labeled Clusters and Features/FDay/{cluster_array[2*i]}",
-#                             f"{device}Labeled Clusters and Features/FDay/{cluster_array[2*i]}",
-#                             low = 20)
-#
-#                 # fig, ax = test_graphs(combined, "r")
-#                 # plt.xlim(0, 9000)
-#                 # plt.ylim(60000, 0)
-#                 # plt.show()
-#                 # plt.close(fig)
-#                 #
-#                 # bounds = 1000
-#                 # fig, ax = plt.subplots()
-#                 # img1 = ax.imshow(data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-#                 # # ax.set_xlim(1200, 1500)
-#                 # plt.ylabel('Time (seconds)')
-#                 # img1.set_cmap(plt.cm.get_cmap('bwr'))
-#                 # plt.show(block=False)
-#                 # plt.close()
-#                 #
-#                 # bounds = 1000
-#                 # fig, ax = plt.subplots()
-#                 # img1 = ax.imshow(filtered_data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-#                 # # ax.set_xlim(1200, 1500)
-#                 # plt.ylabel('Time (seconds)')
-#                 # img1.set_cmap(plt.cm.get_cmap('bwr'))
-#                 # plt.show(block=False)
-#                 # plt.close()
-#
-#
-#
-#             else:
-#                 #data = getData(tdms)
-#                 combined_data = np.append(priordata, data, axis=0)
-#                 #filtered_data = filter_waterfall(data, 1000, lowcut=lowcut, highcut=highcut)
-#                 combined_fdata = np.append(prior_fdata, filtered_data, axis=0)
-#
-#                 clust_num = ((i + 1) * 6) - 1
-#
-#                 combined = []
-#                 for j in range(1, 6):
-#                     with open(f"{directory}{cluster_array[clust_num - j]}", "rb") as fp:  # Unpickling
-#                         cInfo = pickle.load(fp)
-#
-#                     if j == 0:
-#                         for c in cInfo:
-#                             combined.append([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]])
-#                     if j == 1:
-#                         for c in cInfo:
-#                             combined.extend([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] for c in cInfo if [c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] not in combined)
-#                             future_prior.append([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]])
-#                     else:
-#                         combined.extend([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] for c in cInfo if [c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] not in combined)
-#
-#                 with open(f"{directory}{cluster_array[clust_num - 6]}", "rb") as fp:  # Unpickling
-#                     cInfo = pickle.load(fp)
-#
-#                 combined.extend([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]] for c in cInfo if [c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]] not in combined)
-#                 combined = (x for x in combined if x not in prior_cInfo)
-#
-#
-#
-#                 # fig, ax = test_graphs(prior_cInfo, "b")
-#                 # fig, ax = test_graphs(combined, "g", fig, ax)
-#                 # plt.xlim(0, 9000)
-#                 # plt.ylim(60000, 0)
-#                 # plt.show()
-#                 # plt.close(fig)
-#
-#                 combined = unlabeled_association(combined, 0.25, 1000)
-#                 label_cinfo(combined, combined_data, combined_fdata,
-#                             f"{device}Labeled Clusters and Features/FDay/{cluster_array[6*i]}",
-#                             f"{device}Labeled Clusters and Features/FDay/{cluster_array[6*i]}",
-#                             low = 20, offset = 20)
-#
-#                 # fig, ax = test_graphs(combined, "r")
-#                 # plt.xlim(0, 9000)
-#                 # plt.ylim(60000, 0)
-#                 # plt.show()
-#                 # plt.close(fig)
-#                 #
-#                 # bounds = 1000
-#                 # fig, ax = plt.subplots()
-#                 # img1 = ax.imshow(combined_data, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-#                 # # ax.set_xlim(1200, 1500)
-#                 # plt.ylabel('Time (seconds)')
-#                 # img1.set_cmap(plt.cm.get_cmap('bwr'))
-#                 # plt.show(block=False)
-#                 # plt.close()
-#                 #
-#                 # bounds = 1000
-#                 # fig, ax = plt.subplots()
-#                 # img1 = ax.imshow(combined_fdata, aspect='auto', interpolation='none', vmin=-bounds, vmax=bounds)
-#                 # # ax.set_xlim(1200, 1500)
-#                 # plt.ylabel('Time (seconds)')
-#                 # img1.set_cmap(plt.cm.get_cmap('bwr'))
-#                 # plt.show(block=False)
-#                 # plt.close()
-#
-#
-#         priordata = data[19999::]
-#         prior_fdata = filtered_data[19999::]
-#         prior_cInfo = future_prior
-#         count += 1
+def thirty_sec_labelling(tdms_folder, clusters_folder, cnn_model_path, save, window_width, window_height):
+
+    filenames = sorted([filename for filename in os.listdir(tdms_folder)])
+
+    tdms_array = load_folder(tdms_folder)
+    tdms_array = sort_array(tdms_array)
+    clusters_array = sorted(os.listdir(clusters_folder))
+
+    prior_data = None
+    prior_fdata = None
+    prior_cinfo = None
+
+    with tqdm(total=len(tdms_array)) as pbar:
+        for file_number, tdms in enumerate(tdms_array):
+
+            data = get_data(tdms)
+            filtered_data = filter_waterfall(data, 1000, 100)
+
+            future_prior = []
+            combined = []
+            # for if i return to the long feb period
+            # if file_number >= 61:
+            if file_number >= 95:
+                if file_number == 0:
+
+                    for j in range(5):
+                        with open(f"{clusters_folder}/{clusters_array[file_number+j]}", "rb") as fp:  # Unpickling
+                            cluster_data = pickle.load(fp)
+
+                        if j == 0:
+                            for c in cluster_data:
+                                combined.append([c[0], c[1], c[2], c[3], c[4]])
+                        elif j == 4:
+                            combined.extend(x for x in cluster_data if x not in combined)
+                            for c in cluster_data:
+                                future_prior.append([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]])
+                        else:
+                            combined.extend(x for x in cluster_data if x not in combined)
+
+                    temp = []
+                    for c in combined:
+                        if 20 <= c[3] - c[2] < 100 and c[1] != c[0] > 0:
+                            temp.append(c)
+
+                    cluster_data = temp
+                    del temp
+
+                    cluster_data = cluster_association(cluster_data, 0.25, 40, 1000, -1, 100, -1, 1000)
+                    label_cluster(cnn_model_path, cluster_data, data, filtered_data, f"{save}{filenames[file_number]}", window_width, window_height)
+
+                else:
+
+                    combined_data = np.append(prior_data, data, axis=0)
+                    combined_filtered_data = np.append(prior_fdata, filtered_data, axis=0)
+
+                    clust_num = ((file_number + 1) * 6) - 1
+
+                    combined = []
+                    for j in range(1, 6):
+                        with open(f"{clusters_folder}{clusters_array[clust_num - j]}", "rb") as fp:  # Unpickling
+                            cluster_data = pickle.load(fp)
+
+                        if j == 0:
+                            for c in cluster_data:
+                                combined.append([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]])
+                        if j == 1:
+                            for c in cluster_data:
+                                combined.extend([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] for c in cluster_data if [c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] not in combined)
+                                future_prior.append([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]])
+                        else:
+                            combined.extend([c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] for c in cluster_data if [c[0] + 10000, c[1] + 10000, c[2], c[3], c[4]] not in combined)
+
+                    with open(f"{clusters_folder}{clusters_array[clust_num - 6]}", "rb") as fp:  # Unpickling
+                        cluster_data = pickle.load(fp)
+
+                    combined.extend([c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]] for c in cluster_data if [c[0] - 20000, c[1] - 20000, c[2], c[3], c[4]] not in combined)
+                    combined = (x for x in combined if x not in prior_cInfo)
+
+                    temp = []
+                    for c in combined:
+                        if 20 <= c[3] - c[2] < 100 and c[1] != c[0] > 0:
+                            temp.append(c)
+
+                    cluster_data = temp
+                    del temp
+
+                    cluster_data = cluster_association(cluster_data, 0.25, 40, 1000, -1, 100, -1, 1000)
+
+                    label_cluster(cnn_model_path, cluster_data, combined_data, combined_filtered_data, f"{save}{filenames[file_number]}", window_width, window_height, offset=20)
+
+            prior_data = data[19999::]
+            prior_fdata = filtered_data[19999::]
+            prior_cInfo = future_prior
+            pbar.update(1)
+            gc.collect()
 
 if __name__ == '__main__':
 
     device = "G:"
     window = "NDay"
-    save = F"{device}/New Data/NovemberNightNew/Assisted Labelled Data/"
+    save = F"{device}/New Data/FebruaryNightNew/Assisted Labelled Data/"
 
-    tdms_folder = f"{device}/New Data/NovemberNightNew/NightNew/"
-    clusters_folder = f"{device}/New Data/NovemberNightNew/Clusters/"
+    tdms_folder = f"{device}/New Data/FebruaryNightNew/NightNew/"
+    clusters_folder = f"{device}/New Data/FebruaryNightNew/Clusters/"
     cnn_model_path = f"./models/80x120_raw_CNN.pth"
 
-    ten_sec_labelling(tdms_folder, clusters_folder, cnn_model_path, save, 80, 120)
+    thirty_sec_labelling(tdms_folder, clusters_folder, cnn_model_path, save, 80, 120)

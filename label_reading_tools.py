@@ -86,5 +86,5 @@ def unassociated_labelling_10():
 
 if __name__ == '__main__':
 
-    # associated_labelling(f"E:/New Data/NovemberNightNew/Assisted Labelled Data/")
-    unassociated_labelling_10()
+    associated_labelling(f"G:/New Data/FebruaryNightNew/Assisted Labelled Data/")
+    # unassociated_labelling_10()
