@@ -12,12 +12,21 @@ def associated_labelling(root_folder):
     f_count = 0
     e_count = 0
     n_count = 0
+    dupecount = 0
+
+    prev_cluster = None
 
     for window in windows:
         with (open(f"{root_folder}{window}", "rb") as fp):  # Unpickling
             window_import = pickle.load(fp)
 
             for cluster in window_import:
+
+                if cluster == prev_cluster:
+                                print(f"{root_folder}{window}")
+                                print(f"{cluster} == {prev_cluster}")
+                                dupecount += 1
+
                 if cluster[2] == "unlabelled" or cluster[2] == 'u' or cluster[2] == '':
                     unlabelled_windows += 1
                 elif cluster[2] == 'c':
@@ -33,12 +42,15 @@ def associated_labelling(root_folder):
                 else:
                     print(f'Unrecognized label: {cluster[2]}')
 
+                prev_cluster = cluster
+
     print(f"Unlabelled windows: {unlabelled_windows}")
     print(f"c count: {c_count}")
     print(f"p count: {p_count}")
     print(f"f count: {f_count}")
     print(f"e count: {e_count}")
     print(f"n count: {n_count}")
+    print(f"dupecount: {dupecount}")
 
 def unassociated_labelling_10():
     width = 80
@@ -86,5 +98,5 @@ def unassociated_labelling_10():
 
 if __name__ == '__main__':
 
-    associated_labelling(f"G:/New Data/FebruaryNightNew/Assisted Labelled Data/")
+    associated_labelling(f"E:/New Data/NovemberDayNew/Assisted Labelled Data/")
     # unassociated_labelling_10()
