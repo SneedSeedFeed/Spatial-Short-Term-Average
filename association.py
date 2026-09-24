@@ -18,6 +18,16 @@ class Cluster:
     point_count: Number
     points: NumberArray
 
+    def __getitem__(self, key: int) -> Number | NumberArray:
+        match key:
+            case 0: return self.sample_start
+            case 1: return self.sample_end
+            case 2: return self.channel_start
+            case 3: return self.channel_end
+            case 4: return self.point_count
+            case 5: return self.points
+            case _: raise ValueError(f"{key} should be an integer between 0 and 5")
+
 
 def cluster_association_points(
     cluster_data: Iterable[Cluster],
