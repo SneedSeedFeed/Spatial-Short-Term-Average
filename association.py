@@ -59,6 +59,65 @@ def _samples_overlap(a: Cluster, b: Cluster, sample_offset: float) -> bool:
     )
 
 
+def _can_merge(a: Cluster, b: Cluster, channel_offset: float, sample_offset: float) -> bool:
+    return _channels_overlap(a, b, channel_offset) and _samples_overlap(a, b, sample_offset)
+
+
+def _first_match(
+    index: int,
+    clusters: dict[int, Cluster],
+    channel_offset: float,
+    sample_offset: float,
+) -> int | None:
+    """Find this cluster's first matching neighbour"""
+    cluster = clusters[index]
+    for other_index, other in clusters.items():
+        if other_index != index and _can_merge(cluster, other, channel_offset, sample_offset):
+            return other_index
+    return None
+
+
+def _merge_into(target: Cluster, other: Cluster) -> None:
+    channel_start = min(target.channel_start, other.channel_start)
+    channel_end = max(target.channel_end, other.channel_end)
+    sample_start = min(target.sample_start, other.sample_start)
+    sample_end = max(target.sample_end, other.sample_end)
+
+    target.sample_start = target.sample_start if sample_start == 0 else sample_start
+    target.sample_end = target.sample_end if sample_end == 0 else sample_end
+    target.channel_start = target.channel_start if channel_start == 0 else channel_start
+    target.channel_end = target.channel_end if channel_end == 0 else channel_end
+    target.point_count = target.point_count + other.point_count
+    target.points = np.array([
+        np.append(target.points[0], other.points[0]),
+        np.append(target.points[1], other.points[1]),
+    ])
+
+
+def _refresh_matches(
+    clusters: dict[int, Cluster],
+    first_matches: dict[int, int | None],
+    changed: list[int],
+    removed: int,
+    channel_offset: float,
+    sample_offset: float,
+) -> None:
+    """Update cached first matches after a merge"""
+    changed_indices = set(changed)
+    for index in clusters:
+        previous_match = first_matches[index]
+        if index in changed_indices or previous_match in changed_indices or previous_match == removed:
+            first_matches[index] = _first_match(index, clusters, channel_offset, sample_offset)
+            continue
+
+        for changed_index in changed:
+            if previous_match is not None and changed_index >= previous_match:
+                break
+            if _can_merge(clusters[index], clusters[changed_index], channel_offset, sample_offset):
+                first_matches[index] = changed_index
+                break
+
+
 def cluster_association_points(
     cluster_data: Iterable[Cluster],
     sample_overlap: float,
@@ -69,68 +128,32 @@ def cluster_association_points(
     min_length: float,
     max_length: float,
 ) -> list[Cluster]:
-    # massive clusters need filtering or they may skew the association
-    copy: list[Cluster] = []
-    for cluster in cluster_data:
-        if (
-            min_width <= cluster.channel_end - cluster.channel_start < max_width
-            and min_length < cluster.sample_end - cluster.sample_start < max_length
-        ):
-            copy.append(cluster)
-
-    stable = False
-
-    # averaging distance for a signal
+    clusters = {
+        index: cluster
+        for index, cluster in enumerate(cluster_data)
+        if min_width <= cluster.channel_end - cluster.channel_start < max_width
+        and min_length < cluster.sample_end - cluster.sample_start < max_length
+    }
     channel_offset = channel_overlap / 2
-
-    # fixed time diff
     sample_offset = (sample_overlap * fs) / 2
+    first_matches = {
+        index: _first_match(index, clusters, channel_offset, sample_offset)
+        for index in clusters
+    }
 
-    while not stable:
-        stable = True
+    while True:
+        index = next((index for index in clusters if first_matches[index] is not None), None)
+        if index is None:
+            return list(clusters.values())
 
-        for i, a in enumerate(copy):
-            if i == len(copy):
-                print("end")
-            else:
-                for j, b in enumerate(copy):
-                    if i != j:
-                        x_overlap = False
-                        y_overlap = False
-                        c: list[Number] = [0, 0, 0, 0]
+        other_index = first_matches[index]
+        assert other_index is not None
+        target = clusters[index]
+        _merge_into(target, clusters[other_index])
+        del clusters[other_index]
+        del first_matches[other_index]
 
-                        if _channels_overlap(a, b, channel_offset):
-                            c[2] = min([a.channel_start, b.channel_start])
-                            c[3] = max([a.channel_end, b.channel_end])
-                            x_overlap = True
-
-                        if _samples_overlap(a, b, sample_offset):
-                            c[0] = min([a.sample_start, b.sample_start])
-                            c[1] = max([a.sample_end, b.sample_end])
-                            y_overlap = True
-
-                        if x_overlap and y_overlap:
-                            stable = False
-
-                            copy[i].sample_start = copy[i].sample_start if c[0] == 0 else c[0]
-                            copy[i].sample_end = copy[i].sample_end if c[1] == 0 else c[1]
-                            copy[i].channel_start = copy[i].channel_start if c[2] == 0 else c[2]
-                            copy[i].channel_end = copy[i].channel_end if c[3] == 0 else c[3]
-                            copy[i].point_count = copy[i].point_count + copy[j].point_count
-
-                            copy[i].points = np.array(
-                                [
-                                    np.append(copy[i].points[0], copy[j].points[0]),
-                                    np.append(copy[i].points[1], copy[j].points[1]),
-                                ]
-                            )
-
-                            try:
-                                del copy[j]
-                            except IndexError:
-                                print("Index Error")
-                            break
-
-            if not stable:
-                break
-    return copy
+        changed = [key for key, cluster in clusters.items() if cluster is target]
+        _refresh_matches(
+            clusters, first_matches, changed, other_index, channel_offset, sample_offset
+        )
