@@ -29,6 +29,36 @@ class Cluster:
             case _: raise ValueError(f"{key} should be an integer between 0 and 5")
 
 
+def _intervals_overlap(
+    a_start: Number, a_end: Number, b_start: Number, b_end: Number
+) -> bool:
+    # bool cast needed due to numpy bool not being python bool
+    return bool(
+        b_start <= a_start <= b_end <= a_end
+        or a_start <= b_start <= a_end <= b_end
+        or b_start <= a_start <= a_end <= b_end
+        or a_start <= b_start <= b_end <= a_end
+    )
+
+
+def _channels_overlap(a: Cluster, b: Cluster, channel_offset: float) -> bool:
+    midpoint = b.channel_start + int((b.channel_end - b.channel_start) / 2)
+    start = midpoint - channel_offset
+    end = midpoint + channel_offset
+    extended_start = start if start < b.channel_start else b.channel_start
+    extended_end = end if end > b.channel_end else b.channel_end
+    return _intervals_overlap(
+        a.channel_start, a.channel_end, extended_start, extended_end
+    )
+
+
+def _samples_overlap(a: Cluster, b: Cluster, sample_offset: float) -> bool:
+    return _intervals_overlap(
+        a.sample_start, a.sample_end,
+        b.sample_start - sample_offset, b.sample_end + sample_offset,
+    )
+
+
 def cluster_association_points(
     cluster_data: Iterable[Cluster],
     sample_overlap: float,
@@ -51,10 +81,10 @@ def cluster_association_points(
     stable = False
 
     # averaging distance for a signal
-    xOff = channel_overlap / 2
+    channel_offset = channel_overlap / 2
 
     # fixed time diff
-    yOff = (sample_overlap * fs) / 2
+    sample_offset = (sample_overlap * fs) / 2
 
     while not stable:
         stable = True
@@ -69,42 +99,12 @@ def cluster_association_points(
                         y_overlap = False
                         c: list[Number] = [0, 0, 0, 0]
 
-                        # find the midpoint
-                        b_mp = b.channel_start + int((b.channel_end - b.channel_start) / 2)
-
-                        # midpoint extended overlap
-                        if (
-                            (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
-                            <= a.channel_start
-                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
-                            <= a.channel_end
-                            or a.channel_start
-                            <= (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
-                            <= a.channel_end
-                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
-                            or (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
-                            <= a.channel_start
-                            <= a.channel_end
-                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
-                            or a.channel_start
-                            <= (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
-                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
-                            <= a.channel_end
-                        ):
+                        if _channels_overlap(a, b, channel_offset):
                             c[2] = min([a.channel_start, b.channel_start])
                             c[3] = max([a.channel_end, b.channel_end])
                             x_overlap = True
 
-                        # adaptive time difference
-                        # yOff = b.sample_end - b.sample_start
-
-                        # boundry extended overlap
-                        if (
-                            b.sample_start - yOff <= a.sample_start <= b.sample_end + yOff <= a.sample_end
-                            or a.sample_start <= b.sample_start - yOff <= a.sample_end <= b.sample_end + yOff
-                            or b.sample_start - yOff <= a.sample_start <= a.sample_end <= b.sample_end + yOff
-                            or a.sample_start <= b.sample_start - yOff <= b.sample_end + yOff <= a.sample_end
-                        ):
+                        if _samples_overlap(a, b, sample_offset):
                             c[0] = min([a.sample_start, b.sample_start])
                             c[1] = max([a.sample_end, b.sample_end])
                             y_overlap = True
