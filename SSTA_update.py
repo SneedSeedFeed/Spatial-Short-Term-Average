@@ -29,8 +29,7 @@ def ssta(
     with tqdm(total=len(data)) as pbar:
         for i in range(0, len(data)):
             if not (i - num <= 0):
-                temp = np.array(data[i - num : i, start_channel:end_channel])
-                temp = abs(temp)
+                temp = np.abs(data[i - num : i, start_channel:end_channel])
                 mean = temp.mean()
 
                 channel_mask: list[int] = []
