@@ -125,8 +125,6 @@ def cluster_association_points(
                                 ]
                             )
 
-                            # print(b)
-                            # print(copy[i+j+1])
                             try:
                                 del copy[j]
                             except IndexError:
