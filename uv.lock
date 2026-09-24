@@ -684,6 +684,18 @@ wheels = [
 ]
 
 [[package]]
+name = "numpy-typing-compat"
+version = "20260602.2.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/08/db/5cd1d99caea4bf39fd477686ded4b9b70dff3c7673b5d84ef2d96a4f5aab/numpy_typing_compat-20260602.2.5.tar.gz", hash = "sha256:1885a678e9a24564839ed5d1711c0031735fb7de7f0b5ed88d550e5d45a8d4f9", size = 4593 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/a4/9376b38b7387a0296b1f626b966e5503578625c9673777db1b45bf70acb0/numpy_typing_compat-20260602.2.5-py3-none-any.whl", hash = "sha256:21ba7757c8924d359a9ed3ab2163c282a70983ae64498fdba6d1892a6641c8b1", size = 5881 },
+]
+
+[[package]]
 name = "obspy"
 version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -705,6 +717,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a1/07/81a8b2c05a53a54e6cd03f7ef6aa8ae5a926ec40b3a9c38d7bda6a44da1a/obspy-1.5.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:a47902e3ec7d3e46309b85ac6b69327c37f8c0b772a97a29df0cc8dc3f16fc1e", size = 14883957 },
     { url = "https://files.pythonhosted.org/packages/23/e4/defc76e78f203c22d38e7a388afc6e4f00013938cb34ab72462e01b22445/obspy-1.5.1-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:3e0316d9bcd9869febf78af165a403583fa18e21868913c74c3bf87c3e243e25", size = 15269263 },
     { url = "https://files.pythonhosted.org/packages/be/29/3ad91203d5e80184d9f10e0cb2d4fb8c1970c03e7787b3ae11bc5394d213/obspy-1.5.1-cp314-cp314-win_amd64.whl", hash = "sha256:25bf04aa82dea9909935a99213778870832d16dbb8ccb90be144928cdedc8f28", size = 14840080 },
+]
+
+[[package]]
+name = "optype"
+version = "0.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/51/51dc9b1009e020f44703933d4d1ee3429c647c026ce7806b37ee2b257998/optype-0.18.0.tar.gz", hash = "sha256:ea10dee61b15ca299ed0d97025d362585c4dfc5481159bb999a1d0d414bbcb04", size = 59967 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/91/2b064a117cb2593bc3eb04ee994134ca2a6bf2162c92961769947e3258cc/optype-0.18.0-py3-none-any.whl", hash = "sha256:91822ed8516e7a4f225ba53d30f291776c35f31553fb952d7cda98286679c5a6", size = 73410 },
+]
+
+[package.optional-dependencies]
+numpy = [
+    { name = "numpy" },
+    { name = "numpy-typing-compat" },
 ]
 
 [[package]]
@@ -987,6 +1014,18 @@ wheels = [
 ]
 
 [[package]]
+name = "scipy-stubs"
+version = "1.18.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "optype", extra = ["numpy"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/76/13f1b922b32ec866389b6f359cf6c29bdb74726df130f0a23a95c72486c1/scipy_stubs-1.18.1.1.tar.gz", hash = "sha256:87995ba945f04a3c3fb9cdb5c06d093cf3637ca1271ae6799eb8030b63fb2263", size = 460131 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/53/9b6dff8225ef3dbc203b1c2329d9efb2b66dfd51d5c2bf048c0676f47731/scipy_stubs-1.18.1.1-py3-none-any.whl", hash = "sha256:1a48be1702cad1ae9aa850c62ed157c988d990305880511d0e38994d502664f4", size = 665244 },
+]
+
+[[package]]
 name = "setuptools"
 version = "84.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1014,6 +1053,7 @@ dependencies = [
     { name = "obspy" },
     { name = "pandas" },
     { name = "scikit-learn" },
+    { name = "scipy-stubs" },
     { name = "tdqm" },
 ]
 
@@ -1029,6 +1069,7 @@ requires-dist = [
     { name = "obspy", specifier = ">=1.5.1" },
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
+    { name = "scipy-stubs", specifier = ">=1.18.1.1" },
     { name = "tdqm", specifier = ">=0.0.1" },
 ]
 
