@@ -10,7 +10,7 @@ def ssta(
     num: int = 50,
     thresh: int = 2,
     get_mask: bool = True,
-):
+) -> NDArray[np.floating | np.int64]:
     """Performs the spatial short term average on an array of DAS data
 
     Keyword arguments:
