@@ -38,7 +38,18 @@ def ssta(
                 if get_mask:
                     mask.append(hits.astype(np.int64))
                 else:
-                    pass
+                    amplitudes = np.abs(data[i, : hits.size])
+
+                    if not hits.any():
+                        mask.append(np.zeros(hits.size, np.int64))
+                    elif hits.all():
+                        mask.append(amplitudes)
+                    else:
+                        mask.append(
+                            np.where(hits, amplitudes, 0).astype(
+                                np.result_type(data.dtype, np.int64)
+                            )
+                        )
 
             pbar.update()
 
