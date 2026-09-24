@@ -30,27 +30,6 @@ def butter_bandpass(
     return sos
 
 
-def butter_bandpass_filter(
-    data: NDArray[FloatSample],
-    fs: float,
-    lowcut: float = -1,
-    highcut: float = -1,
-    order: int = 6,
-) -> NDArray[np.float64]:
-    """Applies a butterworth filter to a channel of data and returns the filtered data
-
-    Keyword arguments:
-        data -- single channel of data for filtering
-        fs -- frequency of recording
-        lowcut -- lower bound for filter defaults to -1 meaning no lower bound
-        highcut -- higher bound for filter defaults to -1 meaning no higher bound
-        order -- the order of the filter
-    """
-    sos = butter_bandpass(lowcut, highcut, fs, order)
-    y = sosfilt(sos, data)
-    return y
-
-
 def filter_waterfall[SampleT: FloatSample](
     some_data: NDArray[SampleT],
     fs: float,
@@ -68,13 +47,12 @@ def filter_waterfall[SampleT: FloatSample](
         order -- the order of the filter
     """
     filtered_data = np.empty(some_data.shape, dtype=some_data.dtype)
+    sos = butter_bandpass(lowcut, highcut, fs, order)
 
     for samp_num in range(0, len(some_data[0])):
         time_sample = some_data.transpose()[samp_num, :]
 
-        filtered_signal = butter_bandpass_filter(
-            time_sample, lowcut=lowcut, highcut=highcut, fs=fs, order=order
-        )
+        filtered_signal = sosfilt(sos, time_sample)
 
         for i, point in enumerate(filtered_signal):
             filtered_data[i, samp_num] = point
