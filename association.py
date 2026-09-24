@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-
 type Number = int | float | np.integer | np.floating
 type NumberArray = NDArray[np.integer | np.floating]
 
@@ -20,13 +19,20 @@ class Cluster:
 
     def __getitem__(self, key: int) -> Number | NumberArray:
         match key:
-            case 0: return self.sample_start
-            case 1: return self.sample_end
-            case 2: return self.channel_start
-            case 3: return self.channel_end
-            case 4: return self.point_count
-            case 5: return self.points
-            case _: raise ValueError(f"{key} should be an integer between 0 and 5")
+            case 0:
+                return self.sample_start
+            case 1:
+                return self.sample_end
+            case 2:
+                return self.channel_start
+            case 3:
+                return self.channel_end
+            case 4:
+                return self.point_count
+            case 5:
+                return self.points
+            case _:
+                raise ValueError(f"{key} should be an integer between 0 and 5")
 
 
 def _intervals_overlap(
@@ -54,13 +60,19 @@ def _channels_overlap(a: Cluster, b: Cluster, channel_offset: float) -> bool:
 
 def _samples_overlap(a: Cluster, b: Cluster, sample_offset: float) -> bool:
     return _intervals_overlap(
-        a.sample_start, a.sample_end,
-        b.sample_start - sample_offset, b.sample_end + sample_offset,
+        a.sample_start,
+        a.sample_end,
+        b.sample_start - sample_offset,
+        b.sample_end + sample_offset,
     )
 
 
-def _can_merge(a: Cluster, b: Cluster, channel_offset: float, sample_offset: float) -> bool:
-    return _channels_overlap(a, b, channel_offset) and _samples_overlap(a, b, sample_offset)
+def _can_merge(
+    a: Cluster, b: Cluster, channel_offset: float, sample_offset: float
+) -> bool:
+    return _channels_overlap(a, b, channel_offset) and _samples_overlap(
+        a, b, sample_offset
+    )
 
 
 def _first_match(
@@ -72,7 +84,9 @@ def _first_match(
     """Find this cluster's first matching neighbour"""
     cluster = clusters[index]
     for other_index, other in clusters.items():
-        if other_index != index and _can_merge(cluster, other, channel_offset, sample_offset):
+        if other_index != index and _can_merge(
+            cluster, other, channel_offset, sample_offset
+        ):
             return other_index
     return None
 
@@ -88,10 +102,12 @@ def _merge_into(target: Cluster, other: Cluster) -> None:
     target.channel_start = target.channel_start if channel_start == 0 else channel_start
     target.channel_end = target.channel_end if channel_end == 0 else channel_end
     target.point_count = target.point_count + other.point_count
-    target.points = np.array([
-        np.append(target.points[0], other.points[0]),
-        np.append(target.points[1], other.points[1]),
-    ])
+    target.points = np.array(
+        [
+            np.append(target.points[0], other.points[0]),
+            np.append(target.points[1], other.points[1]),
+        ]
+    )
 
 
 def _refresh_matches(
@@ -108,15 +124,23 @@ def _refresh_matches(
         previous_match = first_matches[index]
 
         # definitely stale entry that needs recalculating due to it or its previous match changing
-        if index in changed_indices or previous_match in changed_indices or previous_match == removed:
-            first_matches[index] = _first_match(index, clusters, channel_offset, sample_offset)
+        if (
+            index in changed_indices
+            or previous_match in changed_indices
+            or previous_match == removed
+        ):
+            first_matches[index] = _first_match(
+                index, clusters, channel_offset, sample_offset
+            )
             continue
 
         # maybe changed, check if there are earlier matches available now
         for changed_index in changed:
             if previous_match is not None and changed_index >= previous_match:
                 break
-            if _can_merge(clusters[index], clusters[changed_index], channel_offset, sample_offset):
+            if _can_merge(
+                clusters[index], clusters[changed_index], channel_offset, sample_offset
+            ):
                 first_matches[index] = changed_index
                 break
 
@@ -145,7 +169,9 @@ def cluster_association_points(
     }
 
     while True:
-        index = next((index for index in clusters if first_matches[index] is not None), None)
+        index = next(
+            (index for index in clusters if first_matches[index] is not None), None
+        )
         if index is None:
             return list(clusters.values())
 
