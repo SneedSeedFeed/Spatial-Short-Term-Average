@@ -1,25 +1,42 @@
+from collections.abc import Iterable
+from dataclasses import dataclass
+
 import numpy as np
+from numpy.typing import NDArray
+
+
+type Number = int | float | np.integer | np.floating
+type NumberArray = NDArray[np.integer | np.floating]
+
+
+@dataclass(slots=True)
+class Cluster:
+    sample_start: Number
+    sample_end: Number
+    channel_start: Number
+    channel_end: Number
+    point_count: Number
+    points: NumberArray
 
 
 def cluster_association_points(
-    cluster_data,
-    sample_overlap,
-    channel_overlap,
-    fs,
-    min_width,
-    max_width,
-    min_length,
-    max_length,
-):
-
+    cluster_data: Iterable[Cluster],
+    sample_overlap: float,
+    channel_overlap: float,
+    fs: float,
+    min_width: float,
+    max_width: float,
+    min_length: float,
+    max_length: float,
+) -> list[Cluster]:
     # massive clusters need filtering or they may skew the association
-    copy = []
-    for c in cluster_data:
+    copy: list[Cluster] = []
+    for cluster in cluster_data:
         if (
-            min_width <= c[3] - c[2] < max_width
-            and min_length < c[1] - c[0] < max_length
+            min_width <= cluster.channel_end - cluster.channel_start < max_width
+            and min_length < cluster.sample_end - cluster.sample_start < max_length
         ):
-            copy.append(c)
+            copy.append(cluster)
 
     stable = False
 
@@ -40,61 +57,61 @@ def cluster_association_points(
                     if i != j:
                         x_overlap = False
                         y_overlap = False
-                        c = [0, 0, 0, 0]
+                        c: list[Number] = [0, 0, 0, 0]
 
                         # find the midpoint
-                        b_mp = b[2] + int((b[3] - b[2]) / 2)
+                        b_mp = b.channel_start + int((b.channel_end - b.channel_start) / 2)
 
                         # midpoint extended overlap
                         if (
-                            (b_mp - xOff if b_mp - xOff < b[2] else b[2])
-                            <= a[2]
-                            <= (b_mp + xOff if b_mp + xOff > b[3] else b[3])
-                            <= a[3]
-                            or a[2]
-                            <= (b_mp - xOff if b_mp - xOff < b[2] else b[2])
-                            <= a[3]
-                            <= (b_mp + xOff if b_mp + xOff > b[3] else b[3])
-                            or (b_mp - xOff if b_mp - xOff < b[2] else b[2])
-                            <= a[2]
-                            <= a[3]
-                            <= (b_mp + xOff if b_mp + xOff > b[3] else b[3])
-                            or a[2]
-                            <= (b_mp - xOff if b_mp - xOff < b[2] else b[2])
-                            <= (b_mp + xOff if b_mp + xOff > b[3] else b[3])
-                            <= a[3]
+                            (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
+                            <= a.channel_start
+                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
+                            <= a.channel_end
+                            or a.channel_start
+                            <= (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
+                            <= a.channel_end
+                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
+                            or (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
+                            <= a.channel_start
+                            <= a.channel_end
+                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
+                            or a.channel_start
+                            <= (b_mp - xOff if b_mp - xOff < b.channel_start else b.channel_start)
+                            <= (b_mp + xOff if b_mp + xOff > b.channel_end else b.channel_end)
+                            <= a.channel_end
                         ):
-                            c[2] = min([a[2], b[2]])
-                            c[3] = max([a[3], b[3]])
+                            c[2] = min([a.channel_start, b.channel_start])
+                            c[3] = max([a.channel_end, b.channel_end])
                             x_overlap = True
 
                         # adaptive time difference
-                        # yOff = b[1] - b[0]
+                        # yOff = b.sample_end - b.sample_start
 
                         # boundry extended overlap
                         if (
-                            b[0] - yOff <= a[0] <= b[1] + yOff <= a[1]
-                            or a[0] <= b[0] - yOff <= a[1] <= b[1] + yOff
-                            or b[0] - yOff <= a[0] <= a[1] <= b[1] + yOff
-                            or a[0] <= b[0] - yOff <= b[1] + yOff <= a[1]
+                            b.sample_start - yOff <= a.sample_start <= b.sample_end + yOff <= a.sample_end
+                            or a.sample_start <= b.sample_start - yOff <= a.sample_end <= b.sample_end + yOff
+                            or b.sample_start - yOff <= a.sample_start <= a.sample_end <= b.sample_end + yOff
+                            or a.sample_start <= b.sample_start - yOff <= b.sample_end + yOff <= a.sample_end
                         ):
-                            c[0] = min([a[0], b[0]])
-                            c[1] = max([a[1], b[1]])
+                            c[0] = min([a.sample_start, b.sample_start])
+                            c[1] = max([a.sample_end, b.sample_end])
                             y_overlap = True
 
                         if x_overlap and y_overlap:
                             stable = False
 
-                            copy[i][0] = copy[i][0] if c[0] == 0 else c[0]
-                            copy[i][1] = copy[i][1] if c[1] == 0 else c[1]
-                            copy[i][2] = copy[i][2] if c[2] == 0 else c[2]
-                            copy[i][3] = copy[i][3] if c[3] == 0 else c[3]
-                            copy[i][4] = copy[i][4] + copy[j][4]
+                            copy[i].sample_start = copy[i].sample_start if c[0] == 0 else c[0]
+                            copy[i].sample_end = copy[i].sample_end if c[1] == 0 else c[1]
+                            copy[i].channel_start = copy[i].channel_start if c[2] == 0 else c[2]
+                            copy[i].channel_end = copy[i].channel_end if c[3] == 0 else c[3]
+                            copy[i].point_count = copy[i].point_count + copy[j].point_count
 
-                            copy[i][5] = np.array(
+                            copy[i].points = np.array(
                                 [
-                                    np.append(copy[i][5][0], copy[j][5][0]),
-                                    np.append(copy[i][5][1], copy[j][5][1]),
+                                    np.append(copy[i].points[0], copy[j].points[0]),
+                                    np.append(copy[i].points[1], copy[j].points[1]),
                                 ]
                             )
 
