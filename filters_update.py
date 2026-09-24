@@ -53,8 +53,7 @@ def filter_waterfall[SampleT: FloatSample](
         time_sample = some_data.transpose()[samp_num, :]
 
         filtered_signal = sosfilt(sos, time_sample)
-
-        for i, point in enumerate(filtered_signal):
-            filtered_data[i, samp_num] = point
+        
+        filtered_data[:, samp_num] = filtered_signal
 
     return filtered_data
