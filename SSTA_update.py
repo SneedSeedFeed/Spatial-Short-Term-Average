@@ -2,7 +2,14 @@ from tqdm import tqdm
 import numpy as np
 
 
-def ssta(data, start_channel=1650, end_channel=8500, num=50, thresh=2, get_mask=True):
+def ssta(
+    data,
+    start_channel: int = 1650,
+    end_channel: int = 8500,
+    num: int = 50,
+    thresh: int = 2,
+    get_mask: bool = True,
+):
     """Performs the spatial short term average on an array of DAS data
 
     Keyword arguments:
@@ -21,7 +28,7 @@ def ssta(data, start_channel=1650, end_channel=8500, num=50, thresh=2, get_mask=
     with tqdm(total=len(data)) as pbar:
         for i in range(0, len(data)):
             if not (i - num <= 0):
-                temp = np.array(data[i - num:i, start_channel:end_channel])
+                temp = np.array(data[i - num : i, start_channel:end_channel])
                 temp = abs(temp)
                 mean = temp.mean()
 
@@ -44,6 +51,11 @@ def ssta(data, start_channel=1650, end_channel=8500, num=50, thresh=2, get_mask=
             pbar.update()
 
     mask = np.array(mask)
-    mask = np.pad(mask, [(num, 0), (start_channel, (n_channels - end_channel))], mode='constant', constant_values=-1)
+    mask = np.pad(
+        mask,
+        [(num, 0), (start_channel, (n_channels - end_channel))],
+        mode="constant",
+        constant_values=-1,
+    )
 
     return mask
