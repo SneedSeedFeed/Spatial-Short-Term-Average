@@ -1,9 +1,10 @@
+from numpy.typing import NDArray
 from tqdm import tqdm
 import numpy as np
 
 
 def ssta(
-    data,
+    data: NDArray[np.floating],
     start_channel: int = 1650,
     end_channel: int = 8500,
     num: int = 50,
@@ -24,7 +25,7 @@ def ssta(
     """
 
     n_channels = data.shape[1]
-    mask = []
+    mask: list[list[int]] = []
     with tqdm(total=len(data)) as pbar:
         for i in range(0, len(data)):
             if not (i - num <= 0):
@@ -32,7 +33,7 @@ def ssta(
                 temp = abs(temp)
                 mean = temp.mean()
 
-                channel_mask = []
+                channel_mask: list[int] = []
                 for channel in range(len(temp[0])):
                     cdata = np.array(temp.transpose()[channel, :])
                     cdata = abs(cdata)
@@ -50,12 +51,9 @@ def ssta(
                 mask.append(channel_mask)
             pbar.update()
 
-    mask = np.array(mask)
-    mask = np.pad(
-        mask,
+    return np.pad(
+        np.array(mask),
         [(num, 0), (start_channel, (n_channels - end_channel))],
         mode="constant",
         constant_values=-1,
     )
-
-    return mask
