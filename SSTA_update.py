@@ -32,7 +32,7 @@ def ssta(
                 temp = np.abs(data[i - num : i, start_channel:end_channel])
                 mean = temp.mean()
 
-                channel_means = temp.mean(axis=0)
+                channel_means = np.ascontiguousarray(temp.T).mean(axis=1)
                 hits = channel_means / mean > thresh
 
                 if get_mask:
