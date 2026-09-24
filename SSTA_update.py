@@ -25,29 +25,21 @@ def ssta(
     """
 
     n_channels = data.shape[1]
-    mask: list[list[int]] = []
+    mask: list[NDArray[np.int64] | NDArray[np.floating]] = []
     with tqdm(total=len(data)) as pbar:
         for i in range(0, len(data)):
             if not (i - num <= 0):
                 temp = np.abs(data[i - num : i, start_channel:end_channel])
                 mean = temp.mean()
 
-                channel_mask: list[int] = []
-                for channel in range(len(temp[0])):
-                    cdata = np.array(temp.transpose()[channel, :])
-                    cdata = abs(cdata)
-                    if cdata.mean() / mean > thresh:
+                channel_means = temp.mean(axis=0)
+                hits = channel_means / mean > thresh
 
-                        if get_mask:
-                            # 1 or 0 mask
-                            channel_mask.append(1)
-                        else:
-                            # gives actual amplitude of the data
-                            channel_mask.append(abs(data[i, channel]))
-                    else:
-                        channel_mask.append(0)
+                if get_mask:
+                    mask.append(hits.astype(np.int64))
+                else:
+                    pass
 
-                mask.append(channel_mask)
             pbar.update()
 
     return np.pad(
