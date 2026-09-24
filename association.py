@@ -106,10 +106,13 @@ def _refresh_matches(
     changed_indices = set(changed)
     for index in clusters:
         previous_match = first_matches[index]
+
+        # definitely stale entry that needs recalculating due to it or its previous match changing
         if index in changed_indices or previous_match in changed_indices or previous_match == removed:
             first_matches[index] = _first_match(index, clusters, channel_offset, sample_offset)
             continue
 
+        # maybe changed, check if there are earlier matches available now
         for changed_index in changed:
             if previous_match is not None and changed_index >= previous_match:
                 break
