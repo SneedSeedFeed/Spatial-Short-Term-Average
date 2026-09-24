@@ -1,8 +1,14 @@
 from scipy.signal import butter, sosfilt
 import numpy as np
+from numpy.typing import NDArray
+
+type FloatSample = np.float16 | np.float32 | np.float64
+type SOSCoefficients = np.ndarray[tuple[int, int], np.dtype[np.float64]]
 
 
-def butter_bandpass(lowcut, highcut, fs, order):
+def butter_bandpass(
+    lowcut: float, highcut: float, fs: float, order: int
+) -> SOSCoefficients:
     """Butterworth Bandpass Filter Creator, returns a bandpass filter
 
     Keyword arguments:
@@ -24,7 +30,13 @@ def butter_bandpass(lowcut, highcut, fs, order):
     return sos
 
 
-def butter_bandpass_filter(data, fs, lowcut=-1, highcut=-1, order=6):
+def butter_bandpass_filter(
+    data: NDArray[FloatSample],
+    fs: float,
+    lowcut: float = -1,
+    highcut: float = -1,
+    order: int = 6,
+) -> NDArray[np.float64]:
     """Applies a butterworth filter to a channel of data and returns the filtered data
 
     Keyword arguments:
@@ -39,7 +51,13 @@ def butter_bandpass_filter(data, fs, lowcut=-1, highcut=-1, order=6):
     return y
 
 
-def filter_waterfall(some_data, fs, lowcut=-1, highcut=-1, order=6):
+def filter_waterfall[SampleT: FloatSample](
+    some_data: NDArray[SampleT],
+    fs: float,
+    lowcut: float = -1,
+    highcut: float = -1,
+    order: int = 6,
+) -> NDArray[SampleT]:
     """Applies a Butterworth filter to a full 2D TDMS np array
 
     Keyword arguments:
@@ -49,10 +67,9 @@ def filter_waterfall(some_data, fs, lowcut=-1, highcut=-1, order=6):
         highcut -- higher bound for filter defaults to -1 meaning no higher bound
         order -- the order of the filter
     """
-    filtered_data = np.empty(some_data.shape, type(some_data[0, 0]))
+    filtered_data = np.empty(some_data.shape, dtype=some_data.dtype)
 
     for samp_num in range(0, len(some_data[0])):
-        # print(samp_num)
         time_sample = some_data.transpose()[samp_num, :]
 
         filtered_signal = butter_bandpass_filter(
